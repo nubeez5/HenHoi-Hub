@@ -1,0 +1,1049 @@
+-- Keybinds
+local keybind_ToggleGui = Enum.KeyCode.F4
+
+
+
+
+
+
+
+
+-- Other Variables
+local localPlayer = game.Players.LocalPlayer
+
+-- Stats
+local esp_Line_Transparency = 0
+local esp_Line_Thickness = 2
+local esp_Line_Color = Color3.new(1, 1, 1)
+local esp_RefreshRate = 0.025
+
+local esp_BoxMode = false
+
+
+local esp_Tracers_Transparency = 0.4
+local esp_Tracers_Thickness = 2
+local esp_Tracers_Color = Color3.new(1, 1, 1)
+
+-- Lock
+_G.Lock_Ambient = false
+_G.Lock_OutdoorAmbient = false
+
+_G.Lock_Brightness = false
+_G.Lock_ClockTime = false
+
+_G.Lock_FogStart = false
+_G.Lock_FogEnd = false
+_G.Lock_FogColor = false
+
+_G.Lock_Exposure = false
+
+-- Functions
+local function SendNotification(title, text)
+	game.StarterGui:SetCore("SendNotification", {Title = title, Text = text})
+end
+
+local function DrawLine(ip1, ip2, thickness, transparency, color, parent)
+	local xSize = workspace.CurrentCamera.ViewportSize.X
+	local ySize = workspace.CurrentCamera.ViewportSize.Y - 36
+	
+	local p1, onScreen1 = workspace.CurrentCamera:WorldToScreenPoint(ip1)
+	local p2, onScreen2 = workspace.CurrentCamera:WorldToScreenPoint(ip2)
+	
+	p1 = Vector2.new(p1.X, p1.Y)
+	p2 = Vector2.new(p2.X, p2.Y)
+	
+	if onScreen1 and onScreen2 then
+		local v = p2 - p1
+		
+		local line = Instance.new("Frame", parent)
+		line.Name = "Line"
+		line.BackgroundColor3 = color
+		line.BackgroundTransparency = transparency
+		line.BorderSizePixel = 0
+		line.Size = UDim2.new(0, v.Magnitude + 1, 0, thickness)
+		line.Position = UDim2.new(((p1.X + (v.X / 2)) - (line.AbsoluteSize.X / 2)) / xSize, 0, 
+								  ((p1.Y + (v.Y / 2)) - (line.AbsoluteSize.Y / 2)) / ySize, 0)
+		line.Rotation = math.deg(math.atan2(v.Y, v.X))
+		
+		return line
+	end
+end
+
+-- Create Gui
+local gui = Instance.new("ScreenGui", localPlayer.PlayerGui)
+gui.Name = "HenHoi-Hub"
+gui.ResetOnSpawn = false
+
+local espGui = Instance.new("ScreenGui", localPlayer.PlayerGui)
+espGui.Name = "HenHoi-Hub-ESP"
+espGui.ResetOnSpawn = false
+
+local espStorage = Instance.new("Folder", espGui)
+espStorage.Name = "ESP_Storage"
+
+local mouseIcon = Instance.new("Frame", gui)
+mouseIcon.Name = "MouseIcon"
+mouseIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+mouseIcon.Size = UDim2.new(0, 3, 0, 3)
+mouseIcon.BorderSizePixel = 0
+mouseIcon.BackgroundColor3 = Color3.new(1, 1, 1)
+mouseIcon.Rotation = 45
+mouseIcon.ZIndex = 100
+mouseIcon.Visible = false
+
+local espHitboxImage_Template = Instance.new("ImageLabel")
+espHitboxImage_Template.Name = "ESP_HitboxImage"
+espHitboxImage_Template.Image = "rbxassetid://4835217542"
+espHitboxImage_Template.ScaleType = Enum.ScaleType.Slice
+espHitboxImage_Template.SliceCenter = Rect.new(4, 4, 508, 508)
+espHitboxImage_Template.SliceScale = 0.5
+espHitboxImage_Template.BackgroundTransparency = 1
+espHitboxImage_Template.BorderSizePixel = 0
+espHitboxImage_Template.AnchorPoint = Vector2.new(0.5, 0.5)
+
+
+
+local frame = Instance.new("ImageLabel", gui)
+frame.Name = "Background"
+frame.Image = "rbxassetid://3570695787"
+frame.ImageColor3 = Color3.fromRGB(60, 60, 60)
+frame.ScaleType = Enum.ScaleType.Slice
+frame.SliceCenter = Rect.new(Vector2.new(100, 100), Vector2.new(100, 100))
+frame.SliceScale = 0.04
+frame.Size = UDim2.new(0, 350, 0, 224)
+frame.BackgroundTransparency = 1
+frame.BorderSizePixel = 0
+frame.Active = true
+
+local dragHandle = Instance.new("TextButton", frame)
+dragHandle.Name = "DragHandle"
+dragHandle.BackgroundTransparency = 1
+dragHandle.Size = UDim2.new(1, 0, 0, 18)
+dragHandle.Position = UDim2.new(0, 0, 0, 1)
+dragHandle.Text = ""
+
+local title = Instance.new("TextLabel", frame)
+title.Name = "Title"
+title.BackgroundTransparency = 1
+title.Size = UDim2.new(1, 0, 0, 16)
+title.Font = Enum.Font.GothamSemibold
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.TextSize = 16
+title.Position = UDim2.new(0, 8, 0, 1)
+title.Text = "HenHoi-Hub"
+
+local titleToggleKey = Instance.new("TextLabel", frame)
+titleToggleKey.Name = "TitleToggleKeyNotice"
+titleToggleKey.BackgroundTransparency = 1
+titleToggleKey.Size = UDim2.new(1, 0, 0, 16)
+titleToggleKey.Font = Enum.Font.GothamSemibold
+titleToggleKey.TextColor3 = Color3.new(1, 1, 1)
+titleToggleKey.TextXAlignment = Enum.TextXAlignment.Left
+titleToggleKey.TextSize = 12
+titleToggleKey.Position = UDim2.new(0, 233, 0, 1)
+titleToggleKey.Text = "F4 To Toggle Menu"
+
+local titleBorder = Instance.new("Frame", frame)
+titleBorder.Name = "TitleBorder"
+titleBorder.Size = UDim2.new(1, 0, 0, 1)
+titleBorder.Position = UDim2.new(0.5, 0, 0, 18)
+titleBorder.AnchorPoint = Vector2.new(0.5, 0)
+titleBorder.BorderSizePixel = 0
+
+local titleBorder_Gradient = Instance.new("UIGradient", titleBorder)
+titleBorder.BackgroundColor3 = Color3.new(1, 1, 1)
+titleBorder_Gradient.Transparency = NumberSequence.new{
+	NumberSequenceKeypoint.new(0, 1),
+	NumberSequenceKeypoint.new(0.05, 0.5),
+	NumberSequenceKeypoint.new(0.95, 0.5),
+	NumberSequenceKeypoint.new(1, 1)
+}
+
+local options = Instance.new("ScrollingFrame", frame)
+options.Name = "Options"
+options.AnchorPoint = Vector2.new(0, 1)
+options.Position = UDim2.new(0, 0, 1, 0)
+options.Size = UDim2.new(1, 0, 1, -21)
+options.BackgroundTransparency = 1
+options.ScrollBarThickness = 0
+options.CanvasSize = UDim2.new(0, 0, 0, 733)
+options.BorderSizePixel = 0
+options.ScrollingEnabled = false
+
+local options_List = Instance.new("UIListLayout", options)
+options_List.SortOrder = Enum.SortOrder.LayoutOrder
+options_List.Padding = UDim.new(0, 2)
+
+-- Options Templates
+local option_Template = Instance.new("Frame")
+option_Template.Name = "OptionTemplate"
+option_Template.BackgroundTransparency = 1
+option_Template.BorderSizePixel = 0
+option_Template.Size = UDim2.new(1, 0, 0, 18)
+
+local option_Template_Title = Instance.new("TextButton", option_Template)
+option_Template_Title.Name = "Title"
+option_Template_Title.Position = UDim2.new(0, 14, 0, 0)
+option_Template_Title.Size = UDim2.new(0.4, 0, 1, 0)
+option_Template_Title.BackgroundTransparency = 1
+option_Template_Title.BorderSizePixel = 0
+option_Template_Title.Font = Enum.Font.Gotham
+option_Template_Title.TextSize = 14
+option_Template_Title.TextXAlignment = Enum.TextXAlignment.Left
+option_Template_Title.TextColor3 = Color3.new(1, 1, 1)
+option_Template_Title.Text = "Option Template"
+
+local option_Template_Value = Instance.new("ImageLabel")
+option_Template_Value.Name = "OptionValueBackground"
+option_Template_Value.Image = "rbxassetid://3570695787"
+option_Template_Value.ImageColor3 = Color3.fromRGB(45, 45, 45)
+option_Template_Value.ScaleType = Enum.ScaleType.Slice
+option_Template_Value.SliceCenter = Rect.new(Vector2.new(100, 100), Vector2.new(100, 100))
+option_Template_Value.SliceScale = 0.025
+option_Template_Value.Size = UDim2.new(0, 30, 1, 0)
+option_Template_Value.BackgroundTransparency = 1
+option_Template_Value.BorderSizePixel = 0
+
+local option_Template_Value_TextBox = Instance.new("TextBox", option_Template_Value)
+option_Template_Value_TextBox.Name = "OptionValue"
+option_Template_Value_TextBox.BackgroundTransparency = 1
+option_Template_Value_TextBox.Size = UDim2.new(1, 0, 1, 0)
+option_Template_Value_TextBox.Text = "N/A"
+option_Template_Value_TextBox.TextColor3 = Color3.new(1, 1, 1)
+option_Template_Value_TextBox.TextSize = 13
+option_Template_Value_TextBox.Font = Enum.Font.GothamSemibold
+
+-- Options
+local function CreateValue(parent, sizeX, positionX)
+	local value = option_Template_Value:Clone()
+	value.Parent = parent
+	value.Position = UDim2.new(0, positionX, 0, 0)
+	value.Size = UDim2.new(0, sizeX, 1, 0)
+	
+	return value.OptionValue
+end
+
+local function CreateSlider(parent, sizeX, positionX, value1, value2, secondIsDefault)
+	local sliderOption = secondIsDefault == true and 1 or 0
+	
+	local frame = option_Template_Value:Clone()
+	frame.Parent = parent
+	frame.Position = UDim2.new(0, positionX, 0, 0)
+	frame.Size = UDim2.new(0, sizeX, 1, 0)
+	frame.OptionValue:Destroy()
+	
+	local clickBox = Instance.new("ImageButton", parent)
+	clickBox.Position = UDim2.new(0, positionX, 0, 0)
+	clickBox.Size = UDim2.new(0, sizeX, 1, 0)
+	clickBox.BackgroundTransparency = 1
+	
+	local slider = option_Template_Value:Clone()
+	slider.Parent = frame
+	slider.Position = UDim2.new(0, 0, 0, 0)
+	slider.Size = UDim2.new(0.5, 0, 1, 0)
+	slider.ImageColor3 = Color3.new(0.9, 0.9, 0.9)
+	slider.ZIndex = 2
+	slider.Active = false
+	slider.OptionValue:Destroy()
+	
+	
+	local option_1 = Instance.new("TextLabel", frame)
+	option_1.Size = UDim2.new(0.5, 0, 1, 0)
+	option_1.Position = UDim2.new(0, 0, 0, 0)
+	option_1.BackgroundTransparency = 1
+	option_1.Font = Enum.Font.GothamSemibold
+	option_1.TextSize = 13
+	option_1.TextColor3 = Color3.new(1, 1, 1)
+	option_1.Text = value1
+	
+	local option_2 = option_1:Clone()
+	option_2.Parent = frame
+	option_2.Position = UDim2.new(0.5, 0, 0, 0)
+	option_2.Text = value2
+	
+	local function Check()
+		if sliderOption == 1 then
+			sliderOption = 0
+			
+			local goal = {}
+			goal.Position = UDim2.new(0.5, 0, 0, 0)
+			
+			local info = TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut)
+			local tween = game:GetService("TweenService"):Create(slider, info, goal)
+			tween:Play()
+		elseif sliderOption == 0 then
+			sliderOption = 1
+			
+			local goal = {}
+			goal.Position = UDim2.new(0, 0, 0, 0)
+			
+			local info = TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut)
+			local tween = game:GetService("TweenService"):Create(slider, info, goal)
+			tween:Play()
+		end
+	end
+	
+	Check()
+	
+	clickBox.MouseButton1Click:Connect(function()
+		Check()
+	end)
+	
+	local t = {}
+	function t.GetValue()
+		if sliderOption == 0 then
+			return value1
+		else
+			return value2
+		end
+	end
+	
+	return t
+end
+
+local function CreateDropdownMenu(parent, sizeX, positionX, values)
+	local menuOpen = false
+	local selectedOption = 0
+	
+	local valueOriginalHeight = parent.AbsoluteSize.Y
+	
+	
+	local value = Instance.new("ImageLabel", parent)
+	value.Name = "DropdownMenuBackground"
+	value.Image = "rbxassetid://3570695787"
+	value.ImageColor3 = Color3.fromRGB(45, 45, 45)
+	value.ScaleType = Enum.ScaleType.Slice
+	value.Position = UDim2.new(0, positionX, 0, 0)
+	value.SliceCenter = Rect.new(Vector2.new(100, 100), Vector2.new(100, 100))
+	value.SliceScale = 0.025
+	value.Size = UDim2.new(0, sizeX, 1, 0)
+	value.BackgroundTransparency = 1
+	value.BorderSizePixel = 0
+	value.ZIndex = 3
+	value.Active = true
+	value.Selectable = true
+	
+	local chosenValue = Instance.new("TextButton", value)
+	chosenValue.Name = "ChosenValue"
+	chosenValue.BackgroundTransparency = 1
+	chosenValue.BorderSizePixel = 0
+	chosenValue.BackgroundColor3 = Color3.fromRGB(65, 65, 65)
+	chosenValue.AutoButtonColor = false
+	chosenValue.TextColor3 = Color3.new(1, 1, 1)
+	chosenValue.Font = Enum.Font.GothamSemibold
+	chosenValue.TextSize = 15
+	chosenValue.Text = values[1]
+	chosenValue.Size = UDim2.new(1, 0, 0, valueOriginalHeight)
+	chosenValue.Position = UDim2.new(0, 0, 0, 0)
+	chosenValue.ZIndex = 3
+	
+	local valueButtons = {}
+	
+	local function Check()
+		menuOpen = not menuOpen
+		
+		if menuOpen then
+			value.Size = UDim2.new(0, sizeX, 1, valueOriginalHeight * #values)
+			for _, v in pairs(valueButtons) do v.Visible = true end
+		else
+			value.Size = UDim2.new(0, sizeX, 1, 0)
+			for _, v in pairs(valueButtons) do v.Visible = false end
+		end
+	end
+	
+	for i, v in pairs(values) do
+		local newValue = chosenValue:Clone()
+		newValue.Name = "Option_" .. v
+		newValue.Parent = value
+		newValue.Position = UDim2.new(0, 0, 0, valueOriginalHeight * i)
+		newValue.TextSize = 12
+		newValue.Font = Enum.Font.GothamSemibold
+		newValue.Text = v
+		newValue.Visible = false
+		
+		table.insert(valueButtons, newValue)
+		
+		newValue.MouseButton1Click:Connect(function()
+			chosenValue.Text = v
+			selectedOption = i - 1
+			
+			Check()
+		end)
+		
+		newValue.MouseEnter:Connect(function()
+			local goal = {}
+			goal.BackgroundTransparency = 0.5
+			
+			local info = TweenInfo.new(0.1, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut)
+			local tween = game:GetService("TweenService"):Create(newValue, info, goal)
+			tween:Play()
+		end)
+			
+		newValue.MouseLeave:Connect(function()
+			local goal = {}
+			goal.BackgroundTransparency = 1
+			
+			local info = TweenInfo.new(0.1, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut)
+			local tween = game:GetService("TweenService"):Create(newValue, info, goal)
+			tween:Play()
+		end)
+	end
+	
+	
+	chosenValue.MouseButton1Click:Connect(function()
+		Check()
+	end)
+	
+	local t = {}
+	function t.GetValue()
+		return chosenValue.Text
+	end
+	
+	return t
+end
+
+local function CreateOption(parent, name, text)
+	local option = option_Template:Clone()
+	option.Name = name
+	option.Parent = options
+	option.Title.Text = text
+	
+	return option
+end
+
+local function AddPadding(parent, size, text)
+	local padding = Instance.new("TextButton", parent)
+	padding.Name = "Padding"
+	padding.BackgroundTransparency = 1
+	padding.BorderSizePixel = 0
+	padding.Size = UDim2.new(1, 0, 0, size)
+	padding.Font = Enum.Font.GothamSemibold
+	padding.TextColor3 = Color3.new(0.8, 0.8, 0.8)
+	padding.TextSize = 12
+	padding.TextXAlignment = Enum.TextXAlignment.Left
+	padding.TextYAlignment = Enum.TextYAlignment.Bottom
+	padding.Text = "   " .. text
+	
+	return padding
+end
+
+local function ToggleOptionEvent(button, value)
+	button.MouseButton1Click:Connect(function()
+		_G[value] = not _G[value]
+		
+		if _G[value] then
+			button.TextColor3 = Color3.new(1, 0.7, 0.4)
+			button.Font = Enum.Font.GothamSemibold
+		else
+			button.TextColor3 = Color3.new(1, 1, 1)
+			button.Font = Enum.Font.Gotham
+		end
+	end)
+end
+
+
+
+
+
+
+
+
+
+
+-- Subtitle
+AddPadding(options, 14, "Lighting")
+
+-- Ambient
+local option_Ambient = CreateOption(options, "Ambient", "Ambient")
+
+local option_Ambient_Value_1 = CreateValue(option_Ambient, 40, 205)
+local option_Ambient_Value_2 = CreateValue(option_Ambient, 40, 250)
+local option_Ambient_Value_3 = CreateValue(option_Ambient, 40, 295)
+
+-- Outdoor Ambient Option
+local option_OutdoorAmbient = CreateOption(options, "OutdoorAmbient", "Outdoor Ambient")
+
+local option_OutdoorAmbient_Value_1 = CreateValue(option_OutdoorAmbient, 40, 205)
+local option_OutdoorAmbient_Value_2 = CreateValue(option_OutdoorAmbient, 40, 250)
+local option_OutdoorAmbient_Value_3 = CreateValue(option_OutdoorAmbient, 40, 295)
+
+
+
+AddPadding(options, 5, "")
+
+-- Fog Color Option
+local option_FogColor = CreateOption(options, "FogColor", "Fog Color")
+
+local option_FogColor_Value_1 = CreateValue(option_FogColor, 40, 205)
+local option_FogColor_Value_2 = CreateValue(option_FogColor, 40, 250)
+local option_FogColor_Value_3 = CreateValue(option_FogColor, 40, 295)
+
+-- Fog Start
+local option_FogStart = CreateOption(options, "FogStart", "Fog Start")
+local option_FogStart_Value = CreateValue(option_FogStart, 130, 205)
+
+-- Fog End
+local option_FogEnd = CreateOption(options, "FogEnd", "Fog End")
+local option_FogEnd_Value = CreateValue(option_FogEnd, 130, 205)
+
+AddPadding(options, 5, "")
+
+-- Brightness Option
+local option_Brightness = CreateOption(options, "Brightness", "Brightness")
+local option_Brightness_Value = CreateValue(option_Brightness, 130, 205)
+
+-- Exposure Option
+local option_Exposure = CreateOption(options, "Exposure", "Exposure")
+local option_Exposure_Value = CreateValue(option_Exposure, 130, 205)
+
+AddPadding(options, 5, "")
+
+-- Clock time Option
+local option_ClockTime = CreateOption(options, "ClockTime", "Clock Time")
+local option_ClockTime_Value = CreateValue(option_ClockTime, 130, 205)
+
+---- ESP
+AddPadding(options, 4, "")
+AddPadding(options, 14, "ESP")
+
+local option_ESP_Enabled = CreateOption(options, "ESP_Enabled", "Enabled")
+local option_ESP_Enabled_Slider = CreateSlider(option_ESP_Enabled, 130, 205, "True", "False", false)
+
+AddPadding(options, 4, "")
+
+-- Line color
+local option_ESP_Line_Color = CreateOption(options, "ESP_Line_Color", "Line Color")
+
+local option_ESP_Line_Color_Value_1 = CreateValue(option_ESP_Line_Color, 40, 205)
+local option_ESP_Line_Color_Value_2 = CreateValue(option_ESP_Line_Color, 40, 250)
+local option_ESP_Line_Color_Value_3 = CreateValue(option_ESP_Line_Color, 40, 295)
+
+option_ESP_Line_Color_Value_1.Text = esp_Line_Color.R * 255
+option_ESP_Line_Color_Value_2.Text = esp_Line_Color.G * 255
+option_ESP_Line_Color_Value_3.Text = esp_Line_Color.B * 255
+
+-- Line Transparency
+local option_ESP_Line_Transparency = CreateOption(options, "ESP_Line_Transparency", "Line Transparency")
+local option_ESP_Line_Transparency_Value = CreateValue(option_ESP_Line_Transparency, 130, 205)
+
+option_ESP_Line_Transparency_Value.Text = esp_Line_Transparency
+
+-- Line Thickness
+local option_ESP_Line_Thickness = CreateOption(options, "ESP_Line_Thickness", "Line Thickness")
+local option_ESP_Line_Thickness_Value = CreateValue(option_ESP_Line_Thickness, 130, 205)
+
+option_ESP_Line_Thickness_Value.Text = esp_Line_Thickness
+
+-- Refresh Rate
+AddPadding(options, 4, "")
+
+local option_ESP_Line_RefreshRate = CreateOption(options, "ESP_Line_RefreshRate", "Refresh Rate [ms]")
+local option_ESP_Line_RefreshRate_Value = CreateValue(option_ESP_Line_RefreshRate, 130, 205)
+
+option_ESP_Line_RefreshRate_Value.Text = esp_RefreshRate * 1000
+
+-- Max Distance
+local option_ESP_MaxDistance = CreateOption(options, "ESP_MaxDistance", "Max Distance")
+local option_ESP_MaxDistance_Value = CreateValue(option_ESP_MaxDistance, 130, 205)
+
+option_ESP_MaxDistance_Value.Text = 25000
+
+AddPadding(options, 4, "")
+
+-- Team Check
+local option_ESP_TeamCheck = CreateOption(options, "ESP_TeamCheck", "Team Check Enabled")
+local option_ESP_TeamCheck_Slider = CreateSlider(option_ESP_TeamCheck, 130, 205, "True", "False", false)
+
+-- Name Tags Enabled
+local option_ESP_NameTag = CreateOption(options, "ESP_NameTag", "Name Tag Enabled")
+local option_ESP_NameTag_Slider = CreateSlider(option_ESP_NameTag, 130, 205, "True", "False", false)
+
+AddPadding(options, 4, "")
+
+-- Players
+local option_ESP_ShowPlayers = CreateOption(options, "ESP_ShowPlayers", "Players Shown")
+local option_ESP_ShowPlayers_Slider = CreateSlider(option_ESP_ShowPlayers, 130, 205, "True", "False", true)
+
+-- BRM5 Bots
+local option_ESP_BRM5Bots = CreateOption(options, "ESP_BRM5Bots", "'BRM5' Bots")
+local option_ESP_BRM5Bots_Slider = CreateSlider(option_ESP_BRM5Bots, 130, 205, "True", "False", false)
+
+-- Project Lazarus Bots
+local option_ESP_ProjectLazarusBots = CreateOption(options, "ESP_ProjectLazarusBots", "'Project Lazarus' Bots")
+local option_ESP_ProjectLazarusBots_Slider = CreateSlider(option_ESP_ProjectLazarusBots, 130, 205, "True", "False", false)
+
+-- Those Who Remain
+local option_ESP_ThoseWhoRemainBots = CreateOption(options, "ESP_ThoseWhoRemain", "'TWR' Bots")
+local option_ESP_ThoseWhoRemainBots_Slider = CreateSlider(option_ESP_ThoseWhoRemainBots, 130, 205, "True", "False")
+
+local option_ESP_ThoseWhoRemainBotsFilter = CreateOption(options, "ESP_ThoseWhoRemainFilter", "'TWR' Bots Filter")
+local option_ESP_ThoseWhoRemainBotsFilter_Dropdown =  CreateDropdownMenu(option_ESP_ThoseWhoRemainBotsFilter, 130, 205, {"All", "Civilian", "Military", "Sprinter", "Burster", "Bloater", "Riot", "Bolter"})
+
+---- Tracers
+AddPadding(options, 4, "")
+AddPadding(options, 14, "ESP -> Tracers")
+
+-- Enabled
+local option_ESP_Tracers_Enabled = CreateOption(options, "ESP_Tracers_Enabled", "Tracers Enabled")
+local option_ESP_Tracers_Enabled_Slider = CreateSlider(option_ESP_Tracers_Enabled, 130, 205, "True", "False", false)
+
+AddPadding(options, 4, "")
+
+-- Line color
+local option_ESP_Tracers_Color = CreateOption(options, "ESP_Tracers_Line_Color", "Line Color")
+
+local option_ESP_Tracers_Color_Value_1 = CreateValue(option_ESP_Tracers_Color, 40, 205)
+local option_ESP_Tracers_Color_Value_2 = CreateValue(option_ESP_Tracers_Color, 40, 250)
+local option_ESP_Tracers_Color_Value_3 = CreateValue(option_ESP_Tracers_Color, 40, 295)
+
+option_ESP_Tracers_Color_Value_1.Text = esp_Tracers_Color.R * 255
+option_ESP_Tracers_Color_Value_2.Text = esp_Tracers_Color.G * 255
+option_ESP_Tracers_Color_Value_3.Text = esp_Tracers_Color.B * 255
+
+-- Line Transparency
+local option_ESP_Tracers_Transparency = CreateOption(options, "ESP_Tracers_Line_Transparency", "Line Transparency")
+local option_ESP_Tracers_Transparency_Value = CreateValue(option_ESP_Tracers_Transparency, 130, 205)
+
+option_ESP_Tracers_Transparency_Value.Text = esp_Tracers_Transparency
+
+-- Line Thickness
+local option_ESP_Tracers_Thickness = CreateOption(options, "ESP_Tracers_Line_Thickness", "Line Thickness")
+local option_ESP_Tracers_Thickness_Value = CreateValue(option_ESP_Tracers_Thickness, 130, 205)
+
+option_ESP_Tracers_Thickness_Value.Text = esp_Tracers_Thickness
+
+
+
+
+
+-- Extra Info
+AddPadding(options, 40, "")
+AddPadding(options, 10, "Extra Info")
+
+CreateOption(options, "CreatedBy", "Created by henrynguyen2163#9302")
+
+AddPadding(options, 4, "")
+
+CreateOption(options, "StandsFor_1", "'BRM5' = Black Hawk Rescue Mission 5")
+CreateOption(options, "StandsFor_2", "'TWR' = Those Who Remain")
+
+
+
+
+
+-- Toggle Lock Events
+ToggleOptionEvent(option_Ambient.Title, "Lock_Ambient")
+ToggleOptionEvent(option_OutdoorAmbient.Title, "Lock_OutdoorAmbient")
+ToggleOptionEvent(option_FogColor.Title, "Lock_FogColor")
+ToggleOptionEvent(option_FogStart.Title, "Lock_FogStart")
+ToggleOptionEvent(option_FogEnd.Title, "Lock_FogEnd")
+ToggleOptionEvent(option_Brightness.Title, "Lock_Brightness")
+ToggleOptionEvent(option_Exposure.Title, "Lock_Exposure")
+ToggleOptionEvent(option_ClockTime.Title, "Lock_ClockTime")
+
+-- Dragging Menu
+local dragging = false
+local mouse = localPlayer:GetMouse()
+
+dragHandle.MouseButton1Down:Connect(function()
+	dragging = true
+	
+	local dragStartOffset = Vector2.new(mouse.X, mouse.Y) - frame.AbsolutePosition
+	
+	repeat
+		frame.Position = UDim2.new(0, mouse.X - dragStartOffset.X, 0, mouse.Y - dragStartOffset.Y)
+		
+		game:GetService("RunService").RenderStepped:Wait()
+	until dragging == false
+end)
+
+dragHandle.MouseButton1Up:Connect(function()
+	dragging = false
+end)
+
+-- Mouse Icon
+frame.MouseEnter:Connect(function()
+	mouseIcon.Visible = true
+	
+	repeat
+		mouseIcon.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
+		
+		game:GetService("RunService").RenderStepped:Wait()
+	until mouseIcon.Visible == false
+end)
+
+frame.MouseLeave:Connect(function()
+	mouseIcon.Visible = false
+end)
+
+-- Custom Scrolling
+frame.MouseWheelForward:Connect(function()
+	options.CanvasPosition = Vector2.new(0, options.CanvasPosition.Y - 25)
+end)
+
+frame.MouseWheelBackward:Connect(function()
+	options.CanvasPosition = Vector2.new(0, options.CanvasPosition.Y + 25)
+end)
+
+-- Script
+local step = 0
+local lastTick = tick()
+
+game:GetService("UserInputService").InputBegan:Connect(function(key)
+	if key.KeyCode == keybind_ToggleGui then
+		gui.Enabled = not gui.Enabled
+	end
+end)
+
+game:GetService("RunService").RenderStepped:Connect(function()
+	step = step + 1
+	
+	-- Lighting
+	if _G.Lock_Ambient == false then
+		option_Ambient_Value_1.Text = math.floor(game.Lighting.Ambient.R * 255)
+		option_Ambient_Value_2.Text = math.floor(game.Lighting.Ambient.G * 255)
+		option_Ambient_Value_3.Text = math.floor(game.Lighting.Ambient.B * 255)
+	else
+		local r = typeof(tonumber(option_Ambient_Value_1.Text)) == "number" and tonumber(option_Ambient_Value_1.Text) or 0
+		local g = typeof(tonumber(option_Ambient_Value_2.Text)) == "number" and tonumber(option_Ambient_Value_2.Text) or 0
+		local b = typeof(tonumber(option_Ambient_Value_3.Text)) == "number" and tonumber(option_Ambient_Value_3.Text) or 0
+		
+		game.Lighting.Ambient = Color3.new(r / 255, g / 255, b / 255)
+	end
+	
+	if _G.Lock_OutdoorAmbient == false then
+		option_OutdoorAmbient_Value_1.Text = math.floor(game.Lighting.OutdoorAmbient.R * 255)
+		option_OutdoorAmbient_Value_2.Text = math.floor(game.Lighting.OutdoorAmbient.G * 255)
+		option_OutdoorAmbient_Value_3.Text = math.floor(game.Lighting.OutdoorAmbient.B * 255)
+	else
+		local r = typeof(tonumber(option_OutdoorAmbient_Value_1.Text)) == "number" and tonumber(option_OutdoorAmbient_Value_1.Text) or 0
+		local g = typeof(tonumber(option_OutdoorAmbient_Value_3.Text)) == "number" and tonumber(option_OutdoorAmbient_Value_2.Text) or 0
+		local b = typeof(tonumber(option_OutdoorAmbient_Value_3.Text)) == "number" and tonumber(option_OutdoorAmbient_Value_3.Text) or 0
+		
+		game.Lighting.OutdoorAmbient = Color3.new(r / 255, g / 255, b / 255)
+	end
+	
+	if _G.Lock_FogColor == false then
+		option_FogColor_Value_1.Text = math.floor(game.Lighting.FogColor.R * 255)
+		option_FogColor_Value_2.Text = math.floor(game.Lighting.FogColor.G * 255)
+		option_FogColor_Value_3.Text = math.floor(game.Lighting.FogColor.B * 255)
+	else
+		local r = typeof(tonumber(option_FogColor_Value_1.Text)) == "number" and tonumber(option_FogColor_Value_1.Text) or 0
+		local g = typeof(tonumber(option_FogColor_Value_2.Text)) == "number" and tonumber(option_FogColor_Value_2.Text) or 0
+		local b = typeof(tonumber(option_FogColor_Value_3.Text)) == "number" and tonumber(option_FogColor_Value_3.Text) or 0
+		
+		game.Lighting.FogColor = Color3.new(r / 255, g / 255, b / 255)
+	end
+	
+	if _G.Lock_FogStart == false then
+		option_FogStart_Value.Text = math.floor(game.Lighting.FogStart * 1000) / 1000
+	else
+		game.Lighting.FogStart = tonumber(option_FogStart_Value.Text)
+	end
+	
+	if _G.Lock_FogEnd == false then
+		option_FogEnd_Value.Text = math.floor(game.Lighting.FogEnd * 1000) / 1000
+	else
+		game.Lighting.FogEnd = tonumber(option_FogEnd_Value.Text)
+	end
+	
+	if _G.Lock_Brightness == false then
+		option_Brightness_Value.Text = game.Lighting.Brightness
+	else
+		game.Lighting.Brightness = tonumber(option_Brightness_Value.Text)
+	end
+	
+	if _G.Lock_Exposure == false then
+		option_Exposure_Value.Text = game.Lighting.ExposureCompensation
+	else
+		game.Lighting.ExposureCompensation = tonumber(option_Exposure_Value.Text)
+	end
+	
+	if _G.Lock_ClockTime == false then
+		option_ClockTime_Value.Text = game.Lighting.ClockTime
+	else
+		game.Lighting.ClockTime = tonumber(option_ClockTime_Value.Text)
+	end
+	
+	-- ESP
+	if tick() - lastTick > esp_RefreshRate then
+		for _, v in pairs(espStorage:GetChildren()) do
+			v:Destroy()
+		end
+	end
+			
+	if option_ESP_Enabled_Slider.GetValue() == "True" then
+		-- ESP Hitbox
+		local line_r = typeof(tonumber(option_ESP_Line_Color_Value_1.Text)) == "number" and tonumber(option_ESP_Line_Color_Value_1.Text) or 0
+		local line_g = typeof(tonumber(option_ESP_Line_Color_Value_2.Text)) == "number" and tonumber(option_ESP_Line_Color_Value_2.Text) or 0
+		local line_b = typeof(tonumber(option_ESP_Line_Color_Value_3.Text)) == "number" and tonumber(option_ESP_Line_Color_Value_3.Text) or 0
+		
+		esp_Line_Color = Color3.fromRGB(line_r, line_g, line_b)
+		
+		
+		local transparencyValue = typeof(tonumber(option_ESP_Line_Transparency_Value.Text)) == "number" and tonumber(option_ESP_Line_Transparency_Value.Text) or 0
+		esp_Line_Transparency = transparencyValue
+		
+		local thicknessValue = typeof(tonumber(option_ESP_Line_Thickness_Value.Text)) == "number" and tonumber(option_ESP_Line_Thickness_Value.Text) or 0
+		esp_Line_Thickness = thicknessValue
+		
+		local refreshRateValue = typeof(tonumber(option_ESP_Line_RefreshRate_Value.Text)) == "number" and tonumber(option_ESP_Line_RefreshRate_Value.Text) or 0
+		esp_RefreshRate = refreshRateValue / 1000
+		
+		-- Tracers
+		local tracers_r = typeof(tonumber(option_ESP_Tracers_Color_Value_1.Text)) == "number" and tonumber(option_ESP_Tracers_Color_Value_1.Text) or 0
+		local tracers_g = typeof(tonumber(option_ESP_Tracers_Color_Value_2.Text)) == "number" and tonumber(option_ESP_Tracers_Color_Value_2.Text) or 0
+		local tracers_b = typeof(tonumber(option_ESP_Tracers_Color_Value_3.Text)) == "number" and tonumber(option_ESP_Tracers_Color_Value_3.Text) or 0
+		
+		esp_Tracers_Color = Color3.fromRGB(tracers_r, tracers_g, tracers_b)
+		
+		
+		local tracers_transparency_Value = typeof(tonumber(option_ESP_Tracers_Transparency_Value.Text)) == "number" and tonumber(option_ESP_Tracers_Transparency_Value.Text) or 0
+		esp_Tracers_Transparency = tracers_transparency_Value
+		
+		local tracers_thickness_Value = typeof(tonumber(option_ESP_Tracers_Thickness_Value.Text)) == "number" and tonumber(option_ESP_Tracers_Thickness_Value.Text) or 0
+		esp_Tracers_Thickness = tracers_thickness_Value
+		
+		
+		-- ESP
+		local characters = {}
+		
+		-- Players
+		if option_ESP_ShowPlayers_Slider.GetValue() == "True" then
+			for _, plr in pairs(game.Players:GetPlayers()) do
+				if plr.Character and plr.Name ~= localPlayer.Name then
+					local checked = false
+					
+					if option_ESP_TeamCheck_Slider.GetValue() == "True" then
+						if plr.Team ~= localPlayer.Team then
+							checked = true
+						end
+					else
+						checked = true
+					end
+					
+					if checked then
+						local newChar = {}
+						newChar["Character"] = plr.Character
+						newChar["Name"] = plr.Name
+						
+						if plr.Character:FindFirstChild("Humanoid") then
+							newChar["Health"] = plr.Character.Humanoid.Health
+							newChar["MaxHealth"] = plr.Character.Humanoid.MaxHealth
+						else
+							newChar["Health"] = "N"
+							newChar["MaxHealth"] = "A"
+						end
+						
+						if plr.Team then
+							newChar["TeamName"] = plr.Team.Name
+						else
+							newChar["TeamName"] = "NO TEAM"
+						end
+						
+						table.insert(characters, newChar)
+					end
+				end
+			end
+		end
+		
+		-- BRM5
+		if option_ESP_BRM5Bots_Slider.GetValue() == "True" then
+			if workspace:FindFirstChild("Custom") then
+				if workspace.Custom:FindFirstChild("-1") then
+					for _, char in pairs(workspace.Custom["-1"]:GetChildren()) do
+						if char:FindFirstChild("Humanoid") then
+							local newChar = {}
+							newChar["Character"] = char
+							newChar["Name"] = "BOT"
+							newChar["Health"] = char.Humanoid.Health
+							newChar["MaxHealth"] = char.Humanoid.MaxHealth
+							newChar["TeamName"] = "NO TEAM"
+							
+							table.insert(characters, newChar)
+						end
+					end
+				end
+			end
+		end
+		
+		-- Project Lazarus
+		if option_ESP_ProjectLazarusBots_Slider.GetValue() == "True" then
+			if workspace:FindFirstChild("Baddies") then
+				for _, char in pairs(workspace.Baddies:GetChildren()) do
+					if char:FindFirstChild("Humanoid") then
+						local newChar = {}
+						newChar["Character"] = char
+						newChar["Name"] = "BOT"
+						newChar["Health"] = char.Humanoid.Health
+						newChar["MaxHealth"] = char.Humanoid.MaxHealth
+						newChar["TeamName"] = "NO TEAM"
+						
+						table.insert(characters, newChar)
+					end
+				end
+			end
+		end
+		
+		-- Those Who Remain
+		if option_ESP_ThoseWhoRemainBots_Slider.GetValue() == "True" then
+			if workspace:FindFirstChild("Infected") then
+				for _, char in pairs(workspace.Infected:GetChildren()) do
+					if char:FindFirstChild("Humanoid") then
+						local checked = false
+						
+						if option_ESP_ThoseWhoRemainBotsFilter_Dropdown.GetValue() == "All" then
+							checked = true
+						elseif char.Name == option_ESP_ThoseWhoRemainBotsFilter_Dropdown.GetValue() then
+							checked = true
+						end
+						
+						if checked then
+							local newChar = {}
+							newChar["Character"] = char
+							newChar["Name"] = "BOT"
+							newChar["Health"] = char.Humanoid.Health
+							newChar["MaxHealth"] = char.Humanoid.MaxHealth
+							newChar["TeamName"] = "NO TEAM"
+							
+							table.insert(characters, newChar)
+						end
+					end
+				end
+			end
+		end
+		
+		-- Refresh
+		if tick() - lastTick > esp_RefreshRate then
+			for _, charInfo in pairs(characters) do
+				-- Char Info
+				local character = charInfo["Character"]
+				local character_Name = charInfo["Name"]
+				local character_TeamName = charInfo["TeamName"]
+				
+				local character_Health = charInfo["Health"]
+				local character_MaxHealth = charInfo["MaxHealth"]
+				
+				
+				local maxDistance = typeof(tonumber(option_ESP_MaxDistance_Value.Text)) == "number" and tonumber(option_ESP_MaxDistance_Value.Text) or 0
+				
+				if character:FindFirstChild("HumanoidRootPart") then
+					local distance = (character.HumanoidRootPart.Position - workspace.CurrentCamera.CFrame.Position).Magnitude
+					
+					if distance < maxDistance then
+						-- ESP
+						local p, s = character:GetBoundingBox()
+						s = s / 2
+						
+						if option_ESP_Tracers_Enabled_Slider.GetValue() == "True" then
+							if localPlayer.Character then
+								local xSize = workspace.CurrentCamera.ViewportSize.X
+								local ySize = workspace.CurrentCamera.ViewportSize.Y - 36
+								
+								local p1 = workspace.CurrentCamera:WorldToScreenPoint(workspace.CurrentCamera:ScreenPointToRay(xSize / 2, ySize).Origin)
+								local p2, onScreen = workspace.CurrentCamera:WorldToScreenPoint(p.Position)
+								
+								p1 = Vector2.new(p1.X, p1.Y)
+								p2 = Vector2.new(p2.X, p2.Y)
+								
+								if onScreen then
+									local v = p2 - p1
+									local v2 = v / 2
+									
+									local line = Instance.new("Frame", espGui.ESP_Storage)
+									line.Name = "Line"
+									line.BackgroundColor3 = esp_Tracers_Color
+									line.BackgroundTransparency = esp_Tracers_Transparency
+									line.BorderSizePixel = 0
+									line.Size = UDim2.new(0, v.Magnitude + 1, 0, esp_Tracers_Thickness)
+									line.Position = UDim2.new(((p1.X + (v.X / 2)) - (line.AbsoluteSize.X / 2)) / xSize, 0, 
+															  ((p1.Y + (v.Y / 2)) - (line.AbsoluteSize.Y / 2)) / ySize, 0)
+									line.Rotation = math.deg(math.atan2(v.Y, v.X))
+								end
+							end
+						end
+						
+						local p1 = workspace.CurrentCamera:WorldToScreenPoint(p.Position)
+						local p2 = Vector2.new(p1.X, -math.huge)
+						
+						-- ESP Hitbox
+						local c1 = p * CFrame.new(s.X, s.Y, s.Z).Position
+						local c2 = p * CFrame.new(-s.X, s.Y, s.Z).Position
+						local c3 = p * CFrame.new(-s.X, s.Y, -s.Z).Position
+						local c4 = p * CFrame.new(s.X, s.Y, -s.Z).Position
+						
+						local c5 = p * CFrame.new(s.X, -s.Y, s.Z).Position
+						local c6 = p * CFrame.new(-s.X, -s.Y, s.Z).Position
+						local c7 = p * CFrame.new(-s.X, -s.Y, -s.Z).Position
+						local c8 = p * CFrame.new(s.X, -s.Y, -s.Z).Position
+						
+						local t = {c1, c2, c3, c4, c5, c6, c7, c8}
+						local totalOnScreen = true
+						
+						local min = Vector2.new(math.huge, math.huge)
+						local max = Vector2.new(-math.huge, -math.huge)
+						
+						for _, v in pairs(t) do
+							local pos, onScreen = workspace.CurrentCamera:WorldToScreenPoint(v)
+							
+							min = Vector2.new(math.min(min.X, pos.X), math.min(min.Y, pos.Y))
+							max = Vector2.new(math.max(max.X, pos.X), math.max(max.Y, pos.Y))
+							
+							if onScreen == false then
+								totalOnScreen = false
+							end
+						end
+						
+						if totalOnScreen then
+							local size = max - min
+							local center = (max + min) / 2
+							
+							local box = espHitboxImage_Template:Clone()
+							box.Parent = espStorage
+							box.Size = UDim2.new(0, size.X, 0, size.Y)
+							box.Position = UDim2.new(0, center.X, 0, center.Y)
+							box.ImageColor3 = esp_Line_Color
+							box.ImageTransparency = esp_Line_Transparency
+							box.SliceScale = esp_Line_Thickness / 4
+						end
+						
+						-- Stats
+						if option_ESP_NameTag_Slider.GetValue() == "True" then
+							local onScreenTotal = true
+							
+							for _, v in pairs(t) do
+								local pos, onScreen = workspace.CurrentCamera:WorldToScreenPoint(v)
+								p2 = Vector2.new(p1.X, math.max(p2.Y, pos.Y))
+								
+								if onScreen == false then
+									onScreenTotal = false
+								end
+							end
+							
+							if onScreenTotal then
+								p2 = p2 + Vector2.new(0, 10)
+								
+								local label = Instance.new("TextLabel", espGui.ESP_Storage)
+								label.Name = "NameLabel"
+								label.BackgroundTransparency = 1
+								label.Active = false
+								label.AnchorPoint = Vector2.new(0.5, 0.5)
+								label.Font = Enum.Font.GothamSemibold
+								label.TextColor3 = Color3.new(1, 1, 1)
+								label.TextSize = 9
+								
+								label.Text = "[ " .. character_Name .. " ][ " .. character_Health .. "/" .. character_MaxHealth .. " ][ " .. character_TeamName .. " ]"
+								
+								label.Size = UDim2.new(0, 500, 0, 20)
+								label.Position = UDim2.new(0, p2.X, 0, p2.Y)
+							end
+						end
+					end
+				end
+			end
+			
+			lastTick = tick()
+		end
+	end
+end)
