@@ -812,7 +812,7 @@ game:GetService("RunService").RenderStepped:Connect(function()
 		-- Players
 		if option_ESP_ShowPlayers_Slider.GetValue() == "True" then
 			for _, plr in pairs(game.Players:GetPlayers()) do
-				if plr.Character and plr.Name ~= localPlayer.Name then
+				if plr.Character then
 					local checked = false
 					
 					if option_ESP_TeamCheck_Slider.GetValue() == "True" then
@@ -827,6 +827,7 @@ game:GetService("RunService").RenderStepped:Connect(function()
 						local newChar = {}
 						newChar["Character"] = plr.Character
 						newChar["Name"] = plr.Name
+						newChar["Distance"] = math.floor((workspace.CurrentCamera.CFrame.Position - plr.Character.Head.Position).Magnitude)
 						
 						if plr.Character:FindFirstChild("Humanoid") then
 							newChar["Health"] = plr.Character.Humanoid.Health
