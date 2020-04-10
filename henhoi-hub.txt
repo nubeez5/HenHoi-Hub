@@ -70,11 +70,11 @@ local function DrawLine(ip1, ip2, thickness, transparency, color, parent)
 end
 
 -- Create Gui
-local gui = Instance.new("ScreenGui", localPlayer.PlayerGui)
+local gui = Instance.new("ScreenGui", game.CoreGui)
 gui.Name = "HenHoi-Hub"
 gui.ResetOnSpawn = false
 
-local espGui = Instance.new("ScreenGui", localPlayer.PlayerGui)
+local espGui = Instance.new("ScreenGui", game.CoreGui)
 espGui.Name = "HenHoi-Hub-ESP"
 espGui.ResetOnSpawn = false
 
